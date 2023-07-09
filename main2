@@ -1,0 +1,38 @@
+import requests
+from bs4 import BeautifulSoup
+
+requests = requests.get("https://freeaccountgo.com/free-roblox-accounts-with-robux/")
+
+data = requests.content
+soup = BeautifulSoup(data, "html.parser")
+
+
+def cf_decode_email(encoded_string):
+    r = int(encoded_string[:2],16)
+    email = ''.join([chr(int(encoded_string[j:j+2], 16) ^ r) for j in range(2, len(encoded_string), 2)])
+    return email
+
+
+all_data = soup.find_all("td")
+all_data.pop(0)
+all_data.pop(0)
+passwords = []
+emails = []
+
+for i,val in enumerate(all_data):
+    if i >= 18:
+        break
+    if i % 2 == 1:
+        passwords.append(val.text)
+    elif i % 2 == 0:
+        emails.append((val.find("a")).get('data-cfemail'))
+
+decoded_emails = []
+for encoded_email in emails:
+    decoded_emails.append(cf_decode_email(encoded_email))
+
+f = open("email_passwords.txt", "a")
+
+for index,item in enumerate(decoded_emails):
+    f.write(item + "  :  " + passwords[index]+'\n')
+
